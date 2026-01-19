@@ -22,6 +22,7 @@ import {
   Phone,
   Video
 } from 'lucide-react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 export function BentoSection() {
   const params = useParams();
@@ -30,10 +31,6 @@ export function BentoSection() {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
-  const surface = isDarkMode
-    ? 'bg-card/85 border border-border shadow-xl'
-    : 'bg-white border border-slate-200/80 shadow-[0_25px_55px_rgba(15,23,42,0.08)]';
-  const compactSurface = cn(surface, 'transition-all duration-300');
   const subtleText = isDarkMode ? 'text-muted-foreground' : 'text-slate-500';
   const titleText = isDarkMode ? 'text-foreground' : 'text-slate-900';
 
@@ -62,19 +59,17 @@ export function BentoSection() {
             transition={{ duration: 0.2 }}
             className="col-span-1 sm:col-span-2 lg:col-span-3 lg:row-span-2 group min-h-[280px] lg:min-h-0"
           >
-            <div
-              className={cn(
-                'relative h-full p-6 md:p-8 rounded-3xl overflow-hidden transition-all duration-500',
-                isDarkMode
-                  ? 'bg-gradient-to-br from-violet-500/10 via-card/80 to-purple-500/10 border border-primary/20 hover:border-primary/40'
-                  : 'bg-white border border-slate-200 shadow-[0_30px_60px_rgba(15,23,42,0.12)]'
-              )}
+            <LiquidGlass
+              className="relative h-full p-6 md:p-8 rounded-3xl overflow-hidden transition-all duration-500 border border-white/15"
+              rounded="3xl"
+              highlights
+              blurRadius={34}
             >
               {/* Floating decoration */}
               <motion.div
                 animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
                 transition={{ duration: 4, repeat: Infinity }}
-                className="absolute top-4 right-4 md:top-6 md:right-6"
+                className="absolute -top-2 -right-2"
               >
                 <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center shadow-lg shadow-primary/30">
                   <span className="text-2xl md:text-4xl font-black text-white">100</span>
@@ -120,7 +115,7 @@ export function BentoSection() {
                   </p>
                 </div>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
           {/* Card 2 - Medium: Technologies */}
@@ -129,7 +124,11 @@ export function BentoSection() {
             transition={{ duration: 0.2 }}
             className="col-span-1 sm:col-span-2 lg:col-span-3 lg:row-span-1 group"
           >
-            <div className={cn('relative h-full p-5 rounded-2xl overflow-hidden', compactSurface, 'hover:border-cyan-500/40')}>
+            <LiquidGlass
+              className="relative h-full p-5 rounded-2xl overflow-hidden transition-all duration-300"
+              rounded="2xl"
+              highlights
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="relative z-10 flex items-center justify-between h-full">
@@ -155,7 +154,7 @@ export function BentoSection() {
                   ))}
                 </div>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
           {/* Small cards row - Mobile, SEO, Security */}
@@ -166,7 +165,11 @@ export function BentoSection() {
               transition={{ duration: 0.2 }}
               className="group h-full"
             >
-              <div className={cn('relative h-full p-3 md:p-4 rounded-2xl min-h-[120px]', compactSurface, 'hover:border-amber-500/40 hover:-translate-y-1')}>
+              <LiquidGlass
+                className="relative h-full p-3 md:p-4 rounded-2xl min-h-[120px] transition-all duration-300 hover:-translate-y-1"
+                rounded="2xl"
+                highlights
+              >
                 <div className="flex flex-col h-full justify-between items-center text-center md:items-start md:text-left gap-3">
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
                     <Smartphone className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -178,7 +181,7 @@ export function BentoSection() {
                     <p className={cn('text-sm', subtleText, 'text-center-mobile')}>100%</p>
                   </div>
                 </div>
-              </div>
+              </LiquidGlass>
             </motion.div>
 
             {/* Card 4 - Small: SEO */}
@@ -187,7 +190,11 @@ export function BentoSection() {
               transition={{ duration: 0.2 }}
               className="group h-full"
             >
-              <div className={cn('relative h-full p-3 md:p-4 rounded-2xl min-h-[120px]', compactSurface, 'hover:border-emerald-500/40 hover:-translate-y-1')}>
+              <LiquidGlass
+                className="relative h-full p-3 md:p-4 rounded-2xl min-h-[120px] transition-all duration-300 hover:-translate-y-1"
+                rounded="2xl"
+                highlights
+              >
                 <div className="flex flex-col h-full justify-between items-center text-center md:items-start md:text-left gap-3">
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
                     <Globe className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -199,7 +206,7 @@ export function BentoSection() {
                     <p className={cn('text-sm', subtleText, 'text-center-mobile')}>TOP Google</p>
                   </div>
                 </div>
-              </div>
+              </LiquidGlass>
             </motion.div>
 
             {/* Card 5 - Small: Security */}
@@ -208,19 +215,23 @@ export function BentoSection() {
               transition={{ duration: 0.2 }}
               className="group h-full"
             >
-              <div className={cn('relative h-full p-3 md:p-4 rounded-2xl min-h-[120px]', compactSurface, 'hover:border-rose-500/40 hover:-translate-y-1')}>
-                <div className="flex flex-col h-full justify-between items-center text-center md:items-start md:text-left gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
+              <LiquidGlass
+                className="relative h-full p-3 md:p-4 rounded-2xl min-h-[120px] transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                rounded="2xl"
+                highlights
+              >
+                <div className="flex flex-col h-full justify-between items-center text-center md:items-start md:text-left gap-3 min-w-0 w-full">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
                   </div>
-                  <div className="space-y-1 text-center-mobile">
-                    <p className={cn('text-sm font-medium leading-tight', titleText)}>
+                  <div className="space-y-1 text-center-mobile w-full min-w-0">
+                    <p className={cn('text-sm font-medium leading-tight break-words overflow-wrap-anywhere', titleText)}>
                       {t.bentoSecurity || 'Безпека'}
                     </p>
-                    <p className={cn('text-sm', subtleText, 'text-center-mobile')}>SSL + DDoS</p>
+                    <p className={cn('text-sm break-words overflow-wrap-anywhere', subtleText, 'text-center-mobile')}>SSL + DDoS</p>
                   </div>
                 </div>
-              </div>
+              </LiquidGlass>
             </motion.div>
           </div>
 
@@ -230,9 +241,11 @@ export function BentoSection() {
             transition={{ duration: 0.2 }}
             className="col-span-1 sm:col-span-2 lg:col-span-3 lg:row-span-2 group min-h-[280px] lg:min-h-0"
           >
-            <div className={cn('relative h-full p-6 rounded-3xl transition-all duration-500 overflow-hidden', surface, 'hover:border-primary/30')}>
-              {/* Gradient accent */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-violet-500 to-cyan-500 rounded-t-3xl" />
+            <LiquidGlass
+              className="relative h-full p-6 rounded-3xl transition-all duration-500 overflow-hidden"
+              rounded="3xl"
+              highlights
+            >
               
               <div className="relative z-10 h-full flex flex-col">
                 {/* Header */}
@@ -269,15 +282,17 @@ export function BentoSection() {
                     <motion.div 
                       key={i} 
                       whileHover={{ scale: 1.05, y: -3 }}
-                      className={cn(
-                        'flex flex-col items-center justify-center p-3 rounded-2xl transition-all cursor-pointer group/card',
-                        isDarkMode ? 'bg-muted/50 hover:bg-muted/70' : 'bg-slate-50 border border-slate-100 hover:border-primary/20 shadow-sm'
-                      )}
                     >
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${channel.color} flex items-center justify-center mb-2 shadow-lg group-hover/card:shadow-xl transition-shadow`}>
-                        <channel.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-xs font-medium text-foreground">{channel.label}</span>
+                      <LiquidGlass
+                        className="flex flex-col items-center justify-center p-3 rounded-2xl transition-all cursor-pointer group/card"
+                        rounded="2xl"
+                        highlights
+                      >
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${channel.color} flex items-center justify-center mb-2 shadow-lg group-hover/card:shadow-xl transition-shadow`}>
+                          <channel.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">{channel.label}</span>
+                      </LiquidGlass>
                     </motion.div>
                   ))}
                 </div>
@@ -289,7 +304,7 @@ export function BentoSection() {
                   </p>
                 </div>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
           {/* Card 7 - Medium: Design */}
@@ -298,11 +313,15 @@ export function BentoSection() {
             transition={{ duration: 0.2 }}
             className="col-span-1 sm:col-span-1 lg:col-span-2 lg:row-span-1 group"
           >
-            <div className={cn('relative h-full p-5 rounded-2xl overflow-hidden transition-all duration-300', compactSurface, 'hover:border-indigo-500/40')}>
+            <LiquidGlass
+              className="relative h-full p-5 rounded-2xl overflow-hidden transition-all duration-300"
+              rounded="2xl"
+              highlights
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               
               {/* Color dots */}
-              <div className="absolute top-4 right-4 flex gap-1">
+              <div className="absolute top-3 right-4 flex gap-1">
                 {['bg-red-500', 'bg-yellow-500', 'bg-green-500', 'bg-blue-500', 'bg-purple-500'].map((color, i) => (
                   <motion.div
                     key={i}
@@ -322,7 +341,7 @@ export function BentoSection() {
                   <p className={cn('text-xs', subtleText)}>{t.bentoDesignDesc || 'UI/UX на замовлення'}</p>
                 </div>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
           {/* Card 8 - Small: Performance */}
@@ -331,7 +350,11 @@ export function BentoSection() {
             transition={{ duration: 0.2 }}
             className="col-span-1 sm:col-span-1 lg:col-span-1 lg:row-span-1 group"
           >
-            <div className={cn('relative h-full p-3 md:p-4 rounded-2xl transition-all duration-300', compactSurface, 'hover:border-yellow-500/40 hover:-translate-y-1')}>
+            <LiquidGlass
+              className="relative h-full p-3 md:p-4 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+              rounded="2xl"
+              highlights
+            >
               <div className="flex items-center gap-3 md:flex-col md:h-full md:justify-between md:items-start">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center flex-shrink-0">
                   <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -341,18 +364,22 @@ export function BentoSection() {
                   <p className={cn('text-sm', subtleText)}>99.9%</p>
                 </div>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
           {/* SEO Text Block */}
           <motion.div
             className="col-span-1 sm:col-span-2 lg:col-span-3 lg:row-span-1"
           >
-            <div className={cn('h-full p-5 rounded-2xl border text-center-mobile', isDarkMode ? 'bg-card/80 border-border/60' : 'bg-white border-slate-200 shadow-[0_15px_40px_rgba(15,23,42,0.08)]')}>
+            <LiquidGlass
+              className="h-full p-5 rounded-2xl text-center-mobile"
+              rounded="2xl"
+              highlights
+            >
               <p className={cn('text-sm leading-relaxed text-center-mobile', subtleText)}>
                 {t.bentoSeoText || 'Ми створюємо сучасні веб-сайти на React та Next.js з повною оптимізацією для пошукових систем. Кожен проект проходить тестування на швидкість, безпеку та адаптивність. Наша команда забезпечує технічну підтримку та супровід після запуску.'}
               </p>
-            </div>
+            </LiquidGlass>
           </motion.div>
 
         </div>

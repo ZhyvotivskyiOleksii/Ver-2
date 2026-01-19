@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { translations } from '@/lib/translations';
 import { useParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { 
   HelpCircle, 
   ChevronRight, 
@@ -18,6 +19,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { OrderModal } from '../order-modal';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 interface FAQItem {
   question: string;
@@ -111,30 +113,35 @@ export function FAQSection() {
             </p>
 
             {/* CTA Card - hidden on mobile */}
-            <div className="hidden md:block relative p-6 rounded-2xl bg-gradient-to-br from-card to-card/80 border border-border/50 overflow-hidden group">
-              {/* Card glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{t.faqContactTitle || 'Не знайшли відповідь?'}</p>
-                    <p className="text-sm text-muted-foreground">{t.faqContactDesc || 'Ми відповімо на будь-яке питання'}</p>
-                  </div>
-                </div>
+            <div className="hidden md:block">
+              <LiquidGlass
+                className="relative p-6 rounded-2xl overflow-hidden group"
+                rounded="2xl"
+                highlights
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <button 
-                  onClick={() => setIsOrderModalOpen(true)}
-                  className="w-full mt-4 py-3 px-6 rounded-xl bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {t.faqContactButton || 'Написати нам'}
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{t.faqContactTitle || 'Не знайшли відповідь?'}</p>
+                      <p className="text-sm text-muted-foreground">{t.faqContactDesc || 'Ми відповімо на будь-яке питання'}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setIsOrderModalOpen(true)}
+                    className="hero-cta-primary w-full flex items-center justify-center gap-2 text-base font-semibold"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {t.faqContactButton || 'Написати нам'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </LiquidGlass>
             </div>
           </div>
 
@@ -145,13 +152,14 @@ export function FAQSection() {
               const isOpen = openIndex === i;
               
               return (
-                <div
+                <LiquidGlass
                   key={i}
-                  className={`relative rounded-2xl border transition-all duration-300 overflow-hidden ${
-                    isOpen 
-                      ? 'bg-card border-primary/30 shadow-lg shadow-primary/5' 
-                      : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card/80'
-                  }`}
+                  rounded="2xl"
+                  className={cn(
+                    'relative transition-all duration-300 overflow-hidden',
+                    isOpen ? 'border-primary/30 shadow-lg shadow-primary/5' : 'border-white/10 hover:border-primary/15'
+                  )}
+                  highlights
                 >
                     {/* Gradient line on left */}
                     <motion.div
@@ -212,7 +220,7 @@ export function FAQSection() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                </div>
+                </LiquidGlass>
               );
             })}
           </div>

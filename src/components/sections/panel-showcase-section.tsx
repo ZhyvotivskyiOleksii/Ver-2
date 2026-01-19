@@ -811,7 +811,7 @@ export function PanelShowcaseSection() {
           <Button
             asChild
             size="lg"
-            className="rounded-full px-8 py-6 text-base font-semibold bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 shadow-lg shadow-primary/25"
+            className="nano-glass-btn rounded-full px-8 py-6 text-base font-semibold"
           >
             <Link href="https://app.web-impuls.com" target="_blank">
               {p.cta}
@@ -823,5 +823,3 @@ export function PanelShowcaseSection() {
     </section>
   );
 }
-
-

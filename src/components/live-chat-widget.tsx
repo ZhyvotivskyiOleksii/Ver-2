@@ -469,9 +469,12 @@ export const LiveChatContent = forwardRef<HTMLDivElement, LiveChatContentProps>(
         onClick={(e) => e.stopPropagation()}
         style={{ transform: 'translate3d(0,0,0)', backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
       >
-        <Card className="w-full h-full flex flex-col shadow-lg bg-card overflow-hidden sm:bg-card/80 sm:rounded-xl border-none">
+	        <Card className="w-full h-full flex flex-col shadow-lg bg-card overflow-hidden rounded-none sm:bg-card/80 sm:rounded-xl border-none">
           {/* Header */}
-          <CardHeader className="flex flex-row items-center justify-between p-4 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white">
+          <CardHeader
+            className="flex flex-row items-center justify-between p-4 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+          >
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -521,7 +524,7 @@ export const LiveChatContent = forwardRef<HTMLDivElement, LiveChatContentProps>(
           </CardHeader>
 
           {/* Content */}
-          <CardContent className="flex-1 p-0 overflow-hidden bg-background/50 flex flex-col">
+          <CardContent className="flex-1 min-h-0 p-0 overflow-hidden bg-background/50 flex flex-col">
             {showContactForm ? (
               <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/30 flex items-center justify-center">
@@ -565,7 +568,7 @@ export const LiveChatContent = forwardRef<HTMLDivElement, LiveChatContentProps>(
                 </div>
               </div>
             ) : (
-              <ScrollArea ref={scrollAreaRef} className="h-full flex-1">
+              <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
                 <div className="space-y-3 p-4">
                   {messages.length === 0 && !operatorTyping && (
                     <div className="text-center text-muted-foreground text-sm py-8">

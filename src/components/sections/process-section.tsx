@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { translations } from '@/lib/translations';
 import { useParams } from 'next/navigation';
@@ -12,6 +11,7 @@ import {
   CheckCircle2,
   Rocket
 } from 'lucide-react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 const steps = [
   {
@@ -50,7 +50,7 @@ export function ProcessSection() {
   ];
 
 const stepCardBase =
-  'flex flex-col items-center text-center p-4 md:p-5 rounded-3xl border border-transparent backdrop-blur-xl shadow-[0_14px_28px_rgba(5,6,20,0.35)] bg-gradient-to-br from-white/5 via-card/85 to-white/6';
+  'flex flex-col items-center text-center p-4 md:p-5 rounded-3xl h-full';
 const descClass =
   'text-base text-muted-foreground max-w-[220px] md:max-w-[260px] leading-relaxed text-balance overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]';
 const badgeBase =
@@ -84,7 +84,11 @@ const badgeBase =
                   key={i}
                   className={cn('relative w-full', isLast ? 'col-span-2 sm:col-span-1' : '')}
                 >
-                  <div className={`${stepCardBase} items-center text-center`}>
+                  <LiquidGlass
+                    className={`${stepCardBase} items-center text-center`}
+                    rounded="3xl"
+                    highlights
+                  >
                     <motion.div
                       whileHover={{ scale: 1.1, y: -4 }}
                       className={`relative w-12 h-12 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg shadow-[0_12px_20px_rgba(0,0,0,0.35)] mb-3`}
@@ -102,7 +106,7 @@ const badgeBase =
                     <p className={`${descClass} text-center-mobile`}>
                       {stepData[i].desc}
                     </p>
-                  </div>
+                  </LiquidGlass>
                 </div>
               );
             })}

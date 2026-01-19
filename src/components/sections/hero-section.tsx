@@ -1,3 +1,21 @@
+/**
+ * =====================================================
+ * WEB IMPULS - HERO SECTION (Next.js version)
+ * =====================================================
+ * 
+ * Цей файл призначений для копіювання у ваш Next.js проект.
+ * Містить повний функціонал з інтегрованим LiquidGlass ефектом.
+ * 
+ * ВАЖЛИВО: Перед використанням переконайтесь що у вас є:
+ * - @/components/ui/liquid-glass (скопіюйте liquid-glass.nextjs.tsx)
+ * - @/lib/translations
+ * - @/hooks/use-theme
+ * - ../order-modal
+ * - framer-motion
+ * 
+ * =====================================================
+ */
+
 "use client";
 
 import { Button } from '@/components/ui/button';
@@ -11,6 +29,7 @@ import Image from 'next/image';
 import { OrderModal } from '../order-modal';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 export function HeroSection() {
   const params = useParams();
@@ -20,8 +39,8 @@ export function HeroSection() {
   const [selectedService, setSelectedService] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === 'dark';
   
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -85,25 +104,62 @@ export function HeroSection() {
   return (
     <>
       <HeroGlassFilterDefs />
-      <section className="relative w-full min-h-screen overflow-hidden pt-[var(--header-height)] bg-transparent">
+      <section className={cn(
+        "relative w-full min-h-screen overflow-hidden pt-[var(--header-height)]",
+        "bg-transparent" // Фон body буде видно через прозору секцію
+      )}>
+        {/* Розмиті кольорові круги для світлої теми (як в Tree Removal) */}
+        {!isDarkMode && (
+          <>
+            <div 
+              className="absolute rounded-full filter blur-[120px] opacity-40 z-0"
+              style={{
+                width: '500px',
+                height: '500px',
+                top: '-10%',
+                right: '-10%',
+                background: 'rgba(37, 99, 235, 0.25)',
+              }}
+              aria-hidden="true"
+            />
+            <div 
+              className="absolute rounded-full filter blur-[120px] opacity-40 z-0"
+              style={{
+                width: '420px',
+                height: '420px',
+                bottom: '-10%',
+                left: '-5%',
+                background: 'rgba(6, 182, 212, 0.2)',
+              }}
+              aria-hidden="true"
+            />
+          </>
+        )}
         {/* Ялинка на фоні */}
         {isDarkMode && (
-          <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden hidden md:block">
-            <div className="absolute inset-0 flex justify-end">
-              <Image
-                src="/video/back-new.webp"
-                alt="Holiday tree"
-                width={900}
-                height={900}
-                priority
-                sizes="(max-width: 1024px) 45vw, 720px"
-                quality={80}
-                className={cn(
-                  'h-full w-auto max-w-[680px] object-contain object-right md:object-bottom opacity-80',
-                  treeImageStyles
-                )}
-              />
-            </div>
+          <div
+            className="hidden md:flex fixed pointer-events-none z-[2] items-end justify-end"
+            style={{
+              top: 'var(--header-height)',
+              right: 'calc(-1 * (100vw - 100%))',
+              bottom: 0,
+              left: 'min(60vw, 520px)',
+              paddingRight: 'env(safe-area-inset-right, 0px)',
+            }}
+          >
+            <Image
+              src="/video/back-new.webp"
+              alt="Holiday tree"
+              width={900}
+              height={900}
+              priority
+              sizes="(max-width: 1024px) 45vw, 720px"
+              quality={80}
+              className={cn(
+                'h-full w-auto max-w-[660px] object-contain object-right opacity-90 drop-shadow-[0_40px_80px_rgba(58,34,138,0.55)]',
+                treeImageStyles
+              )}
+            />
           </div>
         )}
 
@@ -120,24 +176,38 @@ export function HeroSection() {
               </div>
 
               <h1 className="font-display font-black tracking-tight mb-4 md:mb-6">
-                <span className="block text-[3.5rem] sm:text-5xl md:text-7xl lg:text-7xl xl:text-[8rem] leading-[0.92] text-foreground drop-shadow-lg">
+                <span className={cn(
+                  'block text-[3.5rem] sm:text-5xl md:text-7xl lg:text-7xl xl:text-[8rem] leading-[0.92] text-foreground',
+                  isDarkMode ? 'drop-shadow-lg' : ''
+                )}>
                   STUDIO
                 </span>
                 <span className="flex flex-wrap items-baseline gap-x-2 sm:gap-x-3 md:gap-x-4 text-[3rem] sm:text-4xl md:text-6xl lg:text-6xl xl:text-[6.8rem] leading-[0.95]">
-                  <span className="bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#c084fc] bg-clip-text text-transparent drop-shadow-lg">
-                    WEB
-                  </span>
-                  <span className="text-foreground drop-shadow-lg">IMPULS</span>
+                <span className={cn(
+                  'bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#c084fc] bg-clip-text text-transparent',
+                  isDarkMode ? 'drop-shadow-lg' : ''
+                )}>
+                  WEB
+                </span>
+                <span className={cn('text-foreground', isDarkMode ? 'drop-shadow-lg' : '')}>IMPULS</span>
                 </span>
               </h1>
 
-              <p className={cn('text-base md:text-lg mt-2 text-white/90 mb-8 max-w-xl drop-shadow-md [text-shadow:_0_2px_8px_rgba(0,0,0,0.8)]')}>
+              <p className={cn(
+                'text-base md:text-lg mt-2 mb-8 max-w-xl',
+                isDarkMode 
+                  ? 'text-white/90 drop-shadow-md [text-shadow:_0_2px_8px_rgba(0,0,0,0.8)]' 
+                  : 'text-slate-700'
+              )}>
                 {t.heroDescription1 || 'Розробляємо швидкі, сучасні веб-сайти на React/Next.js, які конвертують відвідувачів у клієнтів'}
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-8">
                 {features.map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-white/80">
+                  <div key={i} className={cn(
+                    'flex items-center gap-2 text-sm',
+                    isDarkMode ? 'text-white/80' : 'text-slate-600'
+                  )}>
                     <feature.icon className="w-4 h-4 text-[hsl(var(--highlight))]" />
                     <span>{feature.text}</span>
                   </div>
@@ -184,11 +254,8 @@ export function HeroSection() {
                       transition={{ duration: 0.25, delay: 0.12 + i * 0.05 }}
                       onClick={() => openOrderModal(service.id)}
                     >
-                      <div className="hero-glass hero-glass--service group cursor-pointer">
-                        <div className="hero-glass__filter" />
-                        <div className="hero-glass__overlay" />
-                        <div className="hero-glass__specular" />
-                        <div className="hero-glass__content">
+                      <LiquidGlass rounded="xl" className="group cursor-pointer">
+                        <div className="flex items-center gap-4 p-4">
                           <div className={`w-11 h-11 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
                             <service.icon className="w-5 h-5 md:w-7 md:h-7 text-white" />
                           </div>
@@ -202,7 +269,7 @@ export function HeroSection() {
                           </div>
                           <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
                         </div>
-                      </div>
+                      </LiquidGlass>
                     </motion.div>
                   ))}
                 </div>
@@ -242,11 +309,8 @@ export function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, delay: 0.22 + i * 0.05 }}
                   >
-                    <div className="hero-glass hero-glass--stat text-center">
-                      <div className="hero-glass__filter" />
-                      <div className="hero-glass__overlay" />
-                      <div className="hero-glass__specular" />
-                      <div className="hero-glass__content">
+                    <LiquidGlass rounded="xl" className="text-center">
+                      <div className="py-4 px-2">
                         <div className={cn('text-2xl md:text-3xl font-black bg-clip-text text-transparent', `bg-gradient-to-r ${decor.text}`)}>
                           {stat.value}
                         </div>
@@ -254,7 +318,7 @@ export function HeroSection() {
                           {stat.label}
                         </div>
                       </div>
-                    </div>
+                    </LiquidGlass>
                   </motion.div>
                 );
               })}
@@ -276,9 +340,9 @@ function HeroGlassFilterDefs() {
   return (
     <svg className="absolute h-0 w-0 opacity-0 pointer-events-none" aria-hidden focusable="false">
       <filter id="hero-glass-dist" x="-40%" y="-40%" width="180%" height="180%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.012" numOctaves="2" seed="72" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="2" result="blurred-noise" />
-        <feDisplacementMap in="SourceGraphic" in2="blurred-noise" scale="55" xChannelSelector="R" yChannelSelector="G" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="5" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="0.8" result="blurred-noise" />
+        <feDisplacementMap in="SourceGraphic" in2="blurred-noise" scale="35" xChannelSelector="R" yChannelSelector="G" />
       </filter>
     </svg>
   );

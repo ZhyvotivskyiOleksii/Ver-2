@@ -1,3 +1,21 @@
+/**
+ * =====================================================
+ * WEB IMPULS - HEADER (Next.js version)
+ * =====================================================
+ * 
+ * Цей файл призначений для копіювання у ваш Next.js проект.
+ * Містить повний функціонал з інтегрованим LiquidGlass ефектом.
+ * 
+ * ВАЖЛИВО: Перед використанням переконайтесь що у вас є:
+ * - @/components/ui/liquid-glass (скопіюйте liquid-glass.nextjs.tsx)
+ * - @/lib/translations
+ * - @/hooks/use-theme
+ * - ../shared/language-switcher
+ * - ../shared/theme-switcher
+ * - framer-motion
+ * 
+ * =====================================================
+ */
 
 'use client';
 
@@ -8,24 +26,16 @@ import {
   Feather,
   Sun,
   Moon,
-  X,
-  Menu,
   Home,
   Users,
   Sparkles,
   Wallet,
   MessageCircle,
   PenLine,
-  ArrowUpRight,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  Sheet,
-  SheetContent,
-  SheetClose,
-  SheetTrigger,
-  SheetTitle,
-} from '@/components/ui/sheet';
+// Sheet removed - using custom fullscreen menu
 import { LanguageSwitcher } from '../shared/language-switcher';
 import { ThemeSwitcher } from '../shared/theme-switcher';
 import { useTheme, type Theme } from '@/hooks/use-theme';
@@ -33,7 +43,7 @@ import { translations } from '@/lib/translations';
 import { useParams, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -103,9 +113,9 @@ export function WebImpulsHeader() {
     const scrollLockRef = useRef(0);
     const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale || 'ua';
     const t = (translations as any)[locale] || translations.ua;
-    const { theme, setTheme: setThemePreference } = useTheme();
-    const isDarkMode = theme === 'dark';
-    const handleThemeChange = (newTheme: Theme) => setThemePreference(newTheme);
+    const { theme, resolvedTheme } = useTheme();
+    const isDarkMode = resolvedTheme === 'dark';
+    // Навігаційна оболонка завжди залишається темною (без змін)
     const navShellStyle: CSSProperties = {
         borderRadius: '9999px 0 0 9999px',
         background: 'linear-gradient(135deg, rgba(12,11,18,0.96), rgba(52,34,80,0.92))',
@@ -113,13 +123,19 @@ export function WebImpulsHeader() {
         borderLeft: '6px solid #8b5cf6',
         boxShadow: '0 22px 40px rgba(5,6,11,0.6)',
     };
+    // Навігаційні посилання завжди білі (навігаційна оболонка завжди темна)
     const navLinkClass = cn(
-        "relative animated-underline text-sm font-medium transition-colors text-white"
+        "relative animated-underline text-sm font-medium transition-colors",
+        "text-white"
     );
     const blogLinkClass = cn(
-        "relative animated-underline flex items-center gap-1.5 text-sm font-medium transition-colors text-white"
+        "relative animated-underline flex items-center gap-1.5 text-sm font-medium transition-colors",
+        "text-white"
     );
-    const dividerClass = 'bg-white/10';
+    const dividerClass = isDarkMode ? 'bg-white/10' : 'bg-slate-300/50';
+    const mobileMenuIconLineClass = isDarkMode
+        ? "bg-gradient-to-r from-white/95 via-white/90 to-white/70"
+        : "bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700";
     
     useEffect(() => {
         const { body } = document;
@@ -257,7 +273,7 @@ const navContent = (
                 </TooltipContent>
             </Tooltip>
         </div>
-        <ThemeSwitcher theme={theme} toggleTheme={handleThemeChange} />
+        <ThemeSwitcher />
         <LanguageSwitcher />
     </TooltipProvider>
   );
@@ -266,22 +282,18 @@ const navContent = (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        !scrolled && "bg-transparent"
+        "bg-transparent"
       )}
     >
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <LiquidGlass
-          className="w-full h-full header-glass"
-          blurRadius={38}
-          highlights={false}
-          grain={false}
-          rounded="none"
-          outlined={false}
-          static
-        >
-          <div className="w-full h-full" />
-        </LiquidGlass>
-      </div>
+	        <LiquidGlass
+	          className="w-full h-full header-glass"
+	          rounded="none"
+	          outlined={false}
+	        >
+	          <div className="w-full h-full" />
+	        </LiquidGlass>
+	      </div>
       <div className="flex h-[var(--header-height)] items-center justify-between">
         <div className="pl-4 sm:pl-6 lg:pl-8">
             <Link href={`/${locale}`} className="flex items-center" prefetch={false}>
@@ -307,177 +319,276 @@ const navContent = (
                 </div>
             </Link>
         </div>
-        <div className="flex items-center">
-            <div className="relative hidden lg:flex items-center">
-                <div
-                    className="relative py-5 pl-8 text-white"
-                    style={navShellStyle}
-                >
+	        <div className="flex items-center">
+	            <div className="relative hidden lg:flex items-center">
+	                <div
+	                    className={cn(
+	                        "relative py-5 pl-8 transition-colors",
+	                        "text-white"
+	                    )}
+	                    style={navShellStyle}
+	                >
                     <nav className="flex items-center gap-4 pr-4 sm:pr-6 lg:pr-8">
                         {navContent}
                     </nav>
                 </div>
-            </div>
-            <div className="block lg:hidden pr-4 sm:pr-6" suppressHydrationWarning>
-              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <SheetTrigger asChild>
-                  <button
-                    className="group relative flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500/20 via-purple-500/15 to-fuchsia-500/20 backdrop-blur-sm text-white hover:from-violet-500/30 hover:via-purple-500/25 hover:to-fuchsia-500/30 transition-all duration-300 active:scale-95 shadow-lg shadow-purple-500/10"
-                    suppressHydrationWarning
-                  >
-                    {/* Animated burger lines */}
-                    <div className="flex flex-col items-center justify-center gap-[5px] w-5">
-                      <span className={cn(
-                        "block h-[2px] rounded-full bg-white transition-all duration-300",
-                        isMenuOpen ? "w-5 rotate-45 translate-y-[7px]" : "w-5 group-hover:w-4"
-                      )} />
-                      <span className={cn(
-                        "block h-[2px] rounded-full bg-white transition-all duration-300",
-                        isMenuOpen ? "opacity-0 w-0" : "w-4 group-hover:w-5"
-                      )} />
-                      <span className={cn(
-                        "block h-[2px] rounded-full bg-white transition-all duration-300",
-                        isMenuOpen ? "w-5 -rotate-45 -translate-y-[7px]" : "w-3 group-hover:w-4"
-                      )} />
-                    </div>
-                    <span className="sr-only">Open menu</span>
-                  </button>
-                </SheetTrigger>
-                <SheetContent
-                  side="right"
-                  className="neon-menu w-full max-w-xs p-0 flex flex-col overflow-hidden rounded-tl-2xl rounded-bl-2xl"
-                  forceMount
-                >
-                  <div className="neon-menu__bg" aria-hidden />
-                  <div className="neon-menu__orb neon-menu__orb--lg" aria-hidden />
-                  <div className="neon-menu__orb neon-menu__orb--sm" aria-hidden />
-                  <div className="neon-menu__header">
-                    <SheetTitle className="text-lg font-semibold text-white">{t.menuTitle || 'Меню'}</SheetTitle>
-                    <SheetClose className="neon-menu__close">
-                      <X className="h-5 w-5" />
-                      <span className="sr-only">Close</span>
-                    </SheetClose>
-                  </div>
-                  <div className="flex-1 overflow-y-auto px-5 pb-4">
-                    <div className="neon-menu__panel">
-                      <div className="neon-menu__timeline">
-                        {menuLinks.map((link, index) => {
-                          const Icon = link.icon;
-                          const href = link.href.startsWith('/')
-                            ? `/${locale}${link.href}`
-                            : link.href;
-                          const active = link.isBlog ? isBlogActive : isActive(link.href);
-                          return (
-                            <Link
-                              key={link.label}
-                              href={href}
-                              prefetch={false}
-                              onClick={() => setIsMenuOpen(false)}
-                              className="neon-menu-link"
-                              data-active={active}
-                              style={{ '--order': index } as CSSProperties}
-                            >
-                              <span className="neon-menu-link__dot" aria-hidden />
-                              <span className="neon-menu-link__pulse" aria-hidden />
-                              <div className="neon-menu-link__content">
-                                <span className="neon-menu-link__icon">
-                                  <Icon className="h-5 w-5" />
-                                </span>
-                                <div className="flex-1">
-                                  <p className="neon-menu-link__label">{link.label}</p>
-                                  <span className="neon-menu-link__meta">{link.meta}</span>
-                                </div>
-                                <ArrowUpRight className="h-4 w-4 opacity-70" />
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="neon-menu__footer">
-                    <div className="neon-menu__socials">
-                      <Link
-                        href="https://www.facebook.com/profile.php?id=61559794323482&locale=ru_RU"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Facebook"
-                        className="neon-menu__social"
-                        prefetch={false}
-                      >
-                        <FacebookIcon />
-                      </Link>
-                      <Link
-                        href="https://www.linkedin.com/in/oleksii-zhyvotivskyi-9b9085303/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="LinkedIn"
-                        className="neon-menu__social"
-                        prefetch={false}
-                      >
-                        <LinkedinIcon />
-                      </Link>
-                      <Link
-                        href="https://github.com/ZhyvotivskyiOleksii"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="GitHub"
-                        className="neon-menu__social"
-                        prefetch={false}
-                      >
-                        <GithubIcon />
-                      </Link>
-                    </div>
-                    <div className="neon-menu__footer-grid">
-                      <div className="neon-menu__languages">
-                        {languages.map(({ code, Flag }) => (
-                          <Link
-                            key={code}
-                            href={getLocalizedPath(code)}
-                            scroll={false}
-                            onClick={() => setIsMenuOpen(false)}
-                            className={cn(
-                              'neon-menu__flag',
-                              locale === code && 'neon-menu__flag--active'
-                            )}
-                          >
-                            <Flag className="h-4 w-6" />
-                          </Link>
-                        ))}
-                      </div>
-                      <div className="neon-menu__theme">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleThemeChange('light')}
-                          className={cn(
-                            'neon-menu__theme-btn',
-                            theme === 'light' && 'neon-menu__theme-btn--active'
-                          )}
-                        >
-                          <Sun className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleThemeChange('dark')}
-                          className={cn(
-                            'neon-menu__theme-btn',
-                            theme === 'dark' && 'neon-menu__theme-btn--active'
-                          )}
-                        >
-                          <Moon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-        </div>
-      </div>
-    </header>
+	            </div>
+	            {/* Mobile burger button - no background */}
+	            <div className="block lg:hidden pr-4 sm:pr-6 z-[60]" suppressHydrationWarning>
+	              <button
+	                type="button"
+	                onClick={() => setIsMenuOpen((v) => !v)}
+	                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+	                className={cn(
+	                  "relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 active:scale-95",
+	                  isDarkMode ? "hover:bg-white/10" : "hover:bg-slate-900/5",
+	                  isMenuOpen && (isDarkMode ? "bg-white/10" : "bg-slate-900/5")
+	                )}
+	                suppressHydrationWarning
+	              >
+	                <div className="relative w-[22px] h-[18px]" aria-hidden="true">
+	                  <span
+	                    className={cn(
+	                      "absolute left-0 top-0 h-[2px] rounded-full transition-all duration-300 origin-center",
+	                      mobileMenuIconLineClass,
+	                      isMenuOpen ? "top-[8px] w-[22px] rotate-45" : "w-[12px]"
+	                    )}
+	                  />
+	                  <span
+	                    className={cn(
+	                      "absolute left-0 top-[8px] h-[2px] rounded-full transition-all duration-200 origin-center",
+	                      mobileMenuIconLineClass,
+	                      isMenuOpen ? "opacity-0 scale-x-0" : "w-[22px]"
+	                    )}
+	                  />
+	                  <span
+	                    className={cn(
+	                      "absolute right-0 top-[16px] h-[2px] rounded-full transition-all duration-300 origin-center",
+	                      mobileMenuIconLineClass,
+	                      isMenuOpen ? "right-auto left-0 top-[8px] w-[22px] -rotate-45" : "w-[14px]"
+	                    )}
+	                  />
+	                </div>
+	              </button>
+	            </div>
+	        </div>
+	      </div>
+	    </header>
 
-    </>
-  );
-}
+	    {/* Mobile Menu (Premium Drawer) */}
+	    <AnimatePresence>
+	      {isMenuOpen && (
+	        <motion.div
+	          key="mobile-menu"
+	          initial={{ opacity: 0 }}
+	          animate={{ opacity: 1 }}
+	          exit={{ opacity: 0 }}
+	          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+	          className="fixed inset-0 z-[55] lg:hidden"
+	          role="dialog"
+	          aria-modal="true"
+	        >
+	          <div
+	            className={cn(
+	              "absolute inset-0",
+	              isDarkMode ? "bg-[#05040a]/70 backdrop-blur-md" : "bg-black/20 backdrop-blur-sm"
+	            )}
+	            onClick={() => setIsMenuOpen(false)}
+	          />
+
+	          <motion.aside
+	            initial={{ x: 40, opacity: 0 }}
+	            animate={{ x: 0, opacity: 1 }}
+	            exit={{ x: 40, opacity: 0 }}
+	            transition={{ type: 'spring', stiffness: 360, damping: 34 }}
+	            data-theme={theme}
+	            className={cn(
+	              "absolute right-0 top-0 h-full w-[min(420px,92vw)] overflow-hidden border-l",
+	              isDarkMode
+	                ? "border-white/10 bg-gradient-to-b from-[#0d0a16]/96 via-[#090712]/92 to-[#05040a]/94 shadow-[0_28px_120px_rgba(0,0,0,0.70)]"
+	                : "border-slate-300 bg-white shadow-[0_28px_120px_rgba(0,0,0,0.15)] backdrop-blur-xl text-slate-800"
+	            )}
+	            style={{
+	              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
+	              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
+	            }}
+	            onClick={(e) => e.stopPropagation()}
+	          >
+	            {/* Accent edge */}
+	            <div
+	              className="pointer-events-none absolute left-0 top-0 h-full w-px opacity-90"
+	              style={{
+	                background: isDarkMode
+	                  ? 'linear-gradient(180deg, rgba(124,58,237,0.0) 0%, rgba(168,85,247,0.55) 30%, rgba(192,132,252,0.25) 70%, rgba(124,58,237,0.0) 100%)'
+	                  : 'linear-gradient(180deg, rgba(37,99,235,0.0) 0%, rgba(37,99,235,0.35) 30%, rgba(6,182,212,0.25) 70%, rgba(37,99,235,0.0) 100%)',
+	              }}
+	            />
+
+	            <div className="relative flex h-full flex-col px-5">
+	              <div className="flex items-center justify-between">
+	                <Link
+	                  href={`/${locale}`}
+	                  prefetch={false}
+	                  onClick={() => setIsMenuOpen(false)}
+	                  className="flex items-center"
+	                  aria-label="Home"
+	                >
+	                  <Image
+	                    src="/icons/logo-web.svg"
+	                    alt="Web Impuls"
+	                    width={150}
+	                    height={50}
+	                    className={cn(
+	                      "h-8 w-auto",
+	                      isDarkMode ? "opacity-95" : "opacity-100 brightness-0"
+	                    )}
+	                  />
+	                </Link>
+
+	                <button
+	                  type="button"
+	                  onClick={() => setIsMenuOpen(false)}
+	                  aria-label="Close menu"
+	                  className={cn(
+	                    "relative flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors active:scale-95",
+	                    isDarkMode 
+	                      ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.07]" 
+	                      : "border-slate-300 bg-slate-100 hover:bg-slate-200"
+	                  )}
+	                >
+	                  <span className="relative h-5 w-5" aria-hidden="true">
+	                    <span
+	                      className={cn(
+	                        "absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full",
+	                        isDarkMode ? mobileMenuIconLineClass : "bg-slate-700",
+	                        "rotate-45"
+	                      )}
+	                    />
+	                    <span
+	                      className={cn(
+	                        "absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full",
+	                        isDarkMode ? mobileMenuIconLineClass : "bg-slate-700",
+	                        "-rotate-45"
+	                      )}
+	                    />
+	                  </span>
+	                </button>
+	              </div>
+
+	              <div className="mt-6 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 scrollbar-hide">
+	                {/* Navigation */}
+	                <motion.div
+	                  initial="closed"
+	                  animate="open"
+	                  exit="closed"
+	                  variants={{
+	                    open: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
+	                    closed: { transition: { staggerChildren: 0.03, staggerDirection: -1 } },
+	                  }}
+	                  className={cn("divide-y", isDarkMode ? "divide-white/10" : "divide-slate-200/70")}
+	                >
+	                  {menuLinks.map((link) => {
+	                    const Icon = link.icon;
+	                    const href = link.href.startsWith('/') ? `/${locale}${link.href}` : link.href;
+	                    const active = link.isBlog ? isBlogActive : isActive(link.href);
+	                    const metaNumber = (link.meta || '').split('·')[0]?.trim();
+
+	                    return (
+	                      <motion.div
+	                        key={link.label}
+	                        variants={{
+	                          open: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 520, damping: 40 } },
+	                          closed: { opacity: 0, x: 18, transition: { duration: 0.12 } },
+	                        }}
+	                      >
+	                        <Link
+	                          href={href}
+	                          prefetch={false}
+	                          onClick={() => setIsMenuOpen(false)}
+	                          className={cn(
+	                            "group flex items-center gap-3 py-3.5 px-1 transition-colors outline-none",
+	                            "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-0",
+	                            isDarkMode ? "hover:text-white" : "hover:text-slate-950",
+	                            active 
+	                              ? "text-primary" 
+	                              : isDarkMode 
+	                                ? "text-white/90" 
+                                : "text-slate-800 font-medium"
+	                          )}
+	                        >
+	                          <Icon className={cn(
+	                            "h-5 w-5", 
+	                            active 
+	                              ? "text-primary" 
+	                              : isDarkMode 
+	                                ? "text-white/55" 
+	                                : "text-slate-700"
+	                          )} />
+
+	                          <div className="min-w-0 flex-1">
+	                            <p className="truncate text-[17px] font-semibold tracking-[-0.01em]">{link.label}</p>
+	                          </div>
+
+	                          {metaNumber && (
+	                            <span className={cn(
+	                              "shrink-0 text-xs tabular-nums", 
+	                              active 
+	                                ? "text-primary/80" 
+	                                : isDarkMode 
+	                                  ? "text-white/30" 
+	                                  : "text-slate-500"
+	                            )}>
+	                              {metaNumber}
+	                            </span>
+	                          )}
+
+	                          <ChevronRight className={cn(
+	                            "h-4 w-4", 
+	                            active 
+	                              ? "text-primary/80" 
+	                              : isDarkMode 
+	                                ? "text-white/25" 
+	                                : "text-slate-500"
+	                          )} />
+	                        </Link>
+	                      </motion.div>
+	                    );
+	                  })}
+	                </motion.div>
+
+	                {/* Controls */}
+	                <div className={cn("mt-6 flex items-center justify-between border-t pt-4", isDarkMode ? "border-white/10" : "border-slate-200/70")}>
+	                  <div className="flex gap-2">
+	                    {languages.map(({ code, Flag }) => (
+	                      <Link
+	                        key={code}
+	                        href={getLocalizedPath(code)}
+	                        scroll={false}
+	                        onClick={() => setIsMenuOpen(false)}
+	                        aria-label={`Language ${code}`}
+	                        className={cn(
+	                          "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+	                          locale === code
+	                            ? "border-primary bg-primary/20"
+	                            : isDarkMode
+	                              ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+	                              : "border-slate-300 bg-white hover:bg-slate-50 shadow-sm"
+	                        )}
+	                      >
+	                        <Flag className="h-3.5 w-5" />
+	                      </Link>
+	                    ))}
+	                  </div>
+
+                  <ThemeSwitcher />
+	                </div>
+	              </div>
+	            </div>
+	          </motion.aside>
+	        </motion.div>
+	      )}
+	    </AnimatePresence>
+
+	    </>
+	  );
+	}

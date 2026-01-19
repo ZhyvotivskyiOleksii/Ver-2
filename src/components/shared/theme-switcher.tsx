@@ -1,90 +1,144 @@
-
 'use client';
 
-import { Sun, Moon, Laptop } from 'lucide-react';
+import { Moon, Sun, Monitor, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect, useRef } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/hooks/use-theme';
 
 interface ThemeSwitcherProps {
-    theme: 'dark' | 'light' | 'system';
-    toggleTheme: (theme: 'dark' | 'light' | 'system') => void;
+  theme?: Theme;
+  toggleTheme?: (theme?: Theme) => void;
 }
 
-export function ThemeSwitcher({ theme, toggleTheme }: ThemeSwitcherProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
-    const wrapperRef = useRef<HTMLDivElement>(null);
+export function ThemeSwitcher({ theme: propTheme, toggleTheme: propToggleTheme }: ThemeSwitcherProps) {
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { theme, resolvedTheme, setTheme } = useTheme();
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        }
+  const currentTheme = propTheme || theme;
+  const handleSetTheme = propToggleTheme || setTheme;
+  const isDark = resolvedTheme === 'dark';
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [wrapperRef]);
-
-    const themes = [
-        { name: 'light', icon: Sun, className: 'text-yellow-400' },
-        { name: 'dark', icon: Moon, className: 'text-orange-400' },
-        { name: 'system', icon: Laptop, className: 'text-primary' },
-    ] as const;
-
-    const CurrentIcon = themes.find(t => t.name === theme)?.icon || Laptop;
-    const currentIconClassName = themes.find(t => t.name === theme)?.className || 'text-primary';
-
-    if (!mounted) {
-        return  <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded-full bg-primary/20 hover:bg-primary/30"
-            aria-label="Toggle theme"
-            disabled
-        >
-            <Laptop className="h-4 w-4 text-primary" />
-        </Button>;
-    }
-
+  if (!mounted) {
     return (
-        <div className="relative" ref={wrapperRef}>
-             <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(!isOpen)}
-                className="h-7 w-7 rounded-full bg-primary/20 hover:bg-primary/30"
-                aria-label="Toggle theme"
-            >
-                <CurrentIcon className={cn("h-4 w-4", currentIconClassName)} />
-            </Button>
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-background/80 ring-1 ring-black ring-opacity-5 z-10">
-                    <div className="py-1" role="menu" aria-orientation="vertical">
-                        {themes.map(({ name, icon: Icon, className }) => (
-                            <button
-                                key={name}
-                                onClick={() => {
-                                    toggleTheme(name);
-                                    setIsOpen(false);
-                                }}
-                                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-foreground hover:bg-primary/20 capitalize"
-                                role="menuitem"
-                            >
-                               <Icon className={cn("h-4 w-4", className)} />
-                               <span>{name}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 rounded-full"
+        aria-label="Toggle theme"
+        disabled
+      >
+        <Sun className="h-4 w-4" />
+      </Button>
     );
+  }
+
+  const getIcon = () => {
+    if (currentTheme === 'system') {
+      return <Monitor className="h-4 w-4 transition-transform duration-300" />;
+    }
+    return isDark ? (
+      <Sun className="h-4 w-4 transition-transform duration-300" />
+    ) : (
+      <Moon className="h-4 w-4 transition-transform duration-300" />
+    );
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-7 w-7 rounded-full transition-all duration-300',
+            isDark 
+              ? 'bg-primary/20 text-primary hover:bg-primary/30' 
+              : 'bg-slate-200/80 text-slate-700 hover:bg-slate-300/80'
+          )}
+          aria-label="Select theme"
+        >
+          {getIcon()}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent 
+        align="end" 
+        className={cn(
+          "w-48 rounded-xl border shadow-xl backdrop-blur-xl p-1.5",
+          isDark 
+            ? "bg-[#0d0a16]/95 border-white/10" 
+            : "bg-white/95 border-slate-200/50"
+        )}
+        sideOffset={8}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <DropdownMenuItem
+          onClick={() => {
+            handleSetTheme('light');
+            setOpen(false);
+          }}
+          className={cn(
+            "flex items-center justify-between cursor-pointer rounded-lg px-3 py-2.5 transition-all",
+            isDark
+              ? "hover:bg-white/10 text-white"
+              : "hover:bg-slate-100 text-slate-900"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <Sun className="h-4 w-4" />
+            <span className="text-sm font-medium">Світла</span>
+          </div>
+          {currentTheme === 'light' && <Check className="h-4 w-4 text-primary" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            handleSetTheme('dark');
+            setOpen(false);
+          }}
+          className={cn(
+            "flex items-center justify-between cursor-pointer rounded-lg px-3 py-2.5 transition-all",
+            isDark
+              ? "hover:bg-white/10 text-white"
+              : "hover:bg-slate-100 text-slate-900"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <Moon className="h-4 w-4" />
+            <span className="text-sm font-medium">Темна</span>
+          </div>
+          {currentTheme === 'dark' && <Check className="h-4 w-4 text-primary" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            handleSetTheme('system');
+            setOpen(false);
+          }}
+          className={cn(
+            "flex items-center justify-between cursor-pointer rounded-lg px-3 py-2.5 transition-all",
+            isDark
+              ? "hover:bg-white/10 text-white"
+              : "hover:bg-slate-100 text-slate-900"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <Monitor className="h-4 w-4" />
+            <span className="text-sm font-medium">Система</span>
+          </div>
+          {currentTheme === 'system' && <Check className="h-4 w-4 text-primary" />}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

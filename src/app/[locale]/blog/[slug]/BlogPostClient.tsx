@@ -1386,7 +1386,7 @@ export default function BlogPostClient() {
                 {t.blogCTADesc}
               </p>
               <Link href={`/${locale}/contact`}>
-                <Button size="lg" className="h-14 px-8 rounded-full text-lg">
+                <Button size="lg" className="hero-cta-primary text-lg">
                   {t.blogCTAButton}
                 </Button>
               </Link>
@@ -1399,4 +1399,3 @@ export default function BlogPostClient() {
     </div>
   );
 }
-

@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useState, useRef, useEffect, forwardRef } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, forwardRef, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, MessageSquare, X, Loader2, User, ArrowRight, Smile, Upload, Clock4, ChevronDown, ArrowLeft, Paperclip, FileText, Download, MoreVertical, Lock, ShieldCheck, Link2, PlusCircle, Trash2, Volume2, VolumeX, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 // Removed Popover for emojis to keep panel inside chat bounds
 import {
   DropdownMenu,
@@ -19,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useParams } from 'next/navigation';
 import { translations } from '@/lib/translations';
-import { generateSuggestion, getChatHistory, saveContact, getLeadStatus, adoptChatSession, resetChatSession, insertAssistantMessage, getChatSession, getExistingChatSession, submitChatFeedback, getChatMetaIfExists, appendUserMessage, saveLeadDetails } from '@/app/actions';
+import { generateSuggestion, getChatHistory, getLeadStatus, adoptChatSession, resetChatSession, getExistingChatSession } from '@/app/actions';
 import { getSupabaseClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +29,7 @@ import Image from 'next/image';
 import { FormattedMessage } from './shared/formatted-message';
 import { format } from 'date-fns';
 import { LiveChatContent } from './live-chat-widget';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -53,13 +53,43 @@ const BotIcon = ({ className }: { className?: string }) => (
   <Image src="/icons/logo-web.svg" alt="Web Impuls Bot" width={90} height={30} className={`h-8 w-auto ${className || ''}`} />
 );
 
+const GlassBubble = ({
+  children,
+  align = 'left',
+  className,
+  depth = 'soft',
+  highlights = false,
+  padding = 'px-4 py-3',
+}: {
+  children: ReactNode;
+  align?: 'left' | 'right';
+  className?: string;
+  depth?: 'soft' | 'deep';
+  highlights?: boolean;
+  padding?: string;
+}) => (
+  <LiquidGlass
+    className={cn(
+      'max-w-[85%] rounded-[26px] border border-white/10 shadow-[0_24px_60px_rgba(5,6,20,0.55)]',
+      align === 'right' && 'ml-auto',
+      className
+    )}
+    rounded="3xl"
+    blurRadius={30}
+    depth={depth}
+    highlights={highlights}
+  >
+    <div className={cn('relative z-[5]', padding)}>{children}</div>
+  </LiquidGlass>
+);
+
 
 
 const WidgetFooter = () => (
-  <div className="w-full flex items-center justify-center text-sm text-muted-foreground/80 pt-2 gap-2">
-    Powered by
-    <a href="#" className="flex items-center gap-2 font-semibold text-foreground/80 hover:text-primary transition-colors">
-      <WebImpulsChatLogo className="h-6 w-auto" />
+  <div className="chat-widget-footer pt-2">
+    <span>Powered by</span>
+    <a href="#" className="transition-colors hover:text-white text-white/80 inline-flex items-center gap-1">
+      <WebImpulsChatLogo className="h-5 w-auto opacity-90" />
     </a>
   </div>
 );
@@ -108,8 +138,16 @@ const MenuContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
       onClick={(e) => e.stopPropagation()}
       style={{ transform: 'translate3d(0,0,0)', backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
     >
-      <Card className="w-full h-full flex flex-col shadow-2xl bg-card overflow-hidden sm:bg-card/80 sm:rounded-xl border-none">
-        <div className="menu-header p-5">
+      <LiquidGlass
+        className="w-full h-full flex flex-col shadow-[0_35px_90px_rgba(5,6,20,0.65)] overflow-hidden sm:rounded-[32px] border border-white/15 bg-gradient-to-br from-[#0d0a16]/92 to-[#1a102e]/88"
+        rounded="none"
+        highlights
+        blurRadius={38}
+      >
+        <div
+          className="menu-header p-5"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.25rem)' }}
+        >
           <div className="flex justify-between items-center mb-1">
             <h3 className="font-bold text-lg md:text-xl text-white">{t.chatMenuTitle}</h3>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-white/20 transition-colors">
@@ -150,77 +188,90 @@ const MenuContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
           </div>
         </div>
 
-        <div className="p-4 flex flex-col gap-3 mt-[-10px] bg-card rounded-t-xl">
+        <div className="p-4 flex flex-col gap-3 mt-[-10px]">
           <p className="text-sm font-semibold text-foreground px-1">{t.chatMessengerTitle}</p>
           <div className="grid grid-cols-3 gap-3">
             {contactItems.map((item, index) => (
+              <LiquidGlass key={index} className="rounded-2xl" rounded="2xl" highlights>
                 <a
-                  key={index}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full text-center p-3 rounded-2xl bg-muted hover:bg-muted/80 transition-colors flex flex-col items-center gap-2"
+                  className="w-full text-center p-3 flex flex-col items-center gap-2"
                 >
                   <Image src={item.icon} alt={item.title} width={32} height={32} className="h-8 w-8" />
                   <p className="font-semibold text-sm">{item.title}</p>
                 </a>
-              )
-            )}
+              </LiquidGlass>
+            ))}
           </div>
 
-          <div className="w-full text-left p-3 rounded-2xl bg-muted hover:bg-muted/80 transition-colors flex items-center gap-3 cursor-pointer relative" onClick={() => onNavigate('chat')}>
-            <div className="p-2 rounded-md">
-              <BotIcon className="h-7 w-auto text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{t.chatMenuAiTitle}</p>
-              <p className="text-xs text-muted-foreground">{t.chatMenuAiDesc}</p>
-            </div>
-            {/* Бейдж з кількістю непрочитаних (від 1 до 99+) */}
-            {unread > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shadow">
-                {unread > 99 ? '99+' : unread}
-              </span>
-            )}
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </div>
-
-          {/* Live support button */}
-          <div className="w-full text-left p-3 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 hover:from-violet-500/20 hover:via-purple-500/20 hover:to-fuchsia-500/20 transition-all flex items-center gap-3 cursor-pointer border border-purple-500/20 group" onClick={() => onNavigate('live')}>
-            <div className="p-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-purple-500/25">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">{t.chatLiveSupport || 'Онлайн підтримка'}</p>
-              <p className="text-xs text-muted-foreground">
-                {isOnline 
-                  ? (t.chatLiveOnline || 'Відповідаємо миттєво') 
-                  : (t.chatLiveOffline || 'Залиште повідомлення')}
-              </p>
-            </div>
-            <div className="flex items-center gap-1">
-              {isOnline ? (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500"></span>
-                </span>
-              ) : (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+          <LiquidGlass
+            className="w-full rounded-2xl cursor-pointer relative"
+            rounded="2xl"
+            highlights
+            onClick={() => onNavigate('chat')}
+          >
+            <div className="w-full text-left p-3 flex items-center gap-3">
+              <div className="p-2 rounded-2xl">
+                <BotIcon className="h-7 w-auto text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">{t.chatMenuAiTitle}</p>
+                <p className="text-xs text-muted-foreground">{t.chatMenuAiDesc}</p>
+              </div>
+              {unread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shadow">
+                  {unread > 99 ? '99+' : unread}
                 </span>
               )}
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </div>
+          </LiquidGlass>
+
+          {/* Live support button */}
+          <LiquidGlass
+            className="w-full rounded-2xl cursor-pointer border border-purple-500/20 group"
+            rounded="2xl"
+            highlights
+            onClick={() => onNavigate('live')}
+          >
+            <div className="w-full text-left p-3 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-purple-500/25">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">{t.chatLiveSupport || 'Онлайн підтримка'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isOnline 
+                    ? (t.chatLiveOnline || 'Відповідаємо миттєво') 
+                    : (t.chatLiveOffline || 'Залиште повідомлення')}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                {isOnline ? (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500"></span>
+                  </span>
+                ) : (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+                  </span>
+                )}
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </div>
+          </LiquidGlass>
 
           <Button variant="link" asChild className="text-sm">
             <Link href={`/${locale}/pricing`}>{t.chatMenuPricingTitle}</Link>
           </Button>
         </div>
-        <CardFooter className="p-4 pt-0 mt-auto bg-card">
+        <div className="px-4 pb-4 pt-0 mt-auto w-full">
           <WidgetFooter />
-        </CardFooter>
-      </Card>
+        </div>
+      </LiquidGlass>
     </motion.div>
   );
 });
@@ -295,6 +346,75 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  const scrollViewportRef = useRef<HTMLElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const scrollFrameRef = useRef<number | null>(null);
+
+  const getScrollViewport = useCallback(() => {
+    if (scrollViewportRef.current) return scrollViewportRef.current;
+    const root = scrollAreaRef.current;
+    if (!root) return null;
+    const viewport = root.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (viewport) scrollViewportRef.current = viewport;
+    return viewport;
+  }, []);
+
+  const updateShouldAutoScroll = useCallback((viewport: HTMLElement) => {
+    const distanceFromBottom = viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight);
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  }, []);
+
+  const scrollToBottom = useCallback((opts?: { force?: boolean }) => {
+    const viewport = getScrollViewport();
+    if (!viewport) return;
+    if (!opts?.force && !shouldAutoScrollRef.current) return;
+    viewport.scrollTop = viewport.scrollHeight;
+  }, [getScrollViewport]);
+
+  const scheduleScrollToBottom = useCallback((opts?: { force?: boolean }) => {
+    if (typeof window === 'undefined') return;
+    if (scrollFrameRef.current != null) return;
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      scrollToBottom(opts);
+    });
+  }, [scrollToBottom]);
+
+  // Track whether user is pinned to the bottom (so we don't "fight" their scroll)
+  useEffect(() => {
+    const viewport = getScrollViewport();
+    if (!viewport) return;
+    const onScroll = () => updateShouldAutoScroll(viewport);
+    onScroll();
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', onScroll);
+  }, [getScrollViewport, updateShouldAutoScroll]);
+
+  // Keep bottom pinned through iOS keyboard / visual viewport resizes (only if already at bottom)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const onResize = () => scheduleScrollToBottom();
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    window.addEventListener('orientationchange', onResize);
+
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [scheduleScrollToBottom]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') return;
+      if (scrollFrameRef.current != null) window.cancelAnimationFrame(scrollFrameRef.current);
+    };
+  }, []);
   
   // Cross-device adoption: if URL contains ?chat=<id> (or ?c=<id>), adopt that session
   useEffect(() => {
@@ -371,19 +491,13 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
     setTimeout(() => handleFormSubmit(), 0);
   };
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
-      if (viewport) {
-        setTimeout(() => {
-          viewport.scrollTop = viewport.scrollHeight;
-        }, 60);
-      }
-    }
-    if (!isLoading) {
-      textareaRef.current?.focus();
-    }
-  }, [messages, isLoading]);
+  useLayoutEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading, scrollToBottom]);
+
+  useLayoutEffect(() => {
+    scheduleScrollToBottom();
+  }, [emojiOpen, scheduleScrollToBottom]);
 
   // Removed additional scrollIntoView on focus to avoid extra jumps on iOS
 
@@ -615,6 +729,7 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
         textarea.style.height = `${textarea.scrollHeight}px`;
         textarea.style.overflowY = 'hidden';
     }
+    scheduleScrollToBottom();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -625,6 +740,9 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
 
   const handleFormSubmit = async () => {
     if (!input.trim() || isLoading) return;
+
+    // User explicitly sent a message: always pin back to bottom.
+    shouldAutoScrollRef.current = true;
 
     // Notify parent to play send sound (audio lives in parent)
     try { onUserSend?.(); } catch {}
@@ -639,6 +757,7 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    scheduleScrollToBottom({ force: true });
     resetIdleTimer(); // no-op (idle disabled)
 
     // Якщо контакту ще немає — показуємо тільки інлайн-форму (ім'я + email/телефон)
@@ -1027,8 +1146,11 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
       onClick={(e) => e.stopPropagation()}
       style={{ transform: 'translate3d(0,0,0)', backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
     >
-      <Card className="w-full h-full flex flex-col shadow-lg bg-card overflow-hidden sm:bg-card/80 sm:rounded-xl border-none">
-        <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-primary-foreground">
+      <LiquidGlass className="w-full h-full flex flex-col bg-transparent shadow-none border-none rounded-none sm:rounded-[32px]" rounded="none" highlights blurRadius={36}>
+        <div
+          className="flex flex-row items-center justify-between p-4 bg-gradient-to-r from-[#7c3aed] via-[#a855f7] to-[#c084fc] text-white rounded-t-none sm:rounded-t-[28px]"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+        >
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -1039,7 +1161,7 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <div className="bg-white/10 px-2 py-1 rounded-full flex items-center justify-center backdrop-blur">
+              <div className="px-2 py-1 rounded-full flex items-center justify-center">
                 <BotIcon className="h-5 w-auto" />
               </div>
               <div className="flex flex-col text-left leading-tight">
@@ -1166,10 +1288,10 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
               <ChevronDown className="h-6 w-6" />
             </Button>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="flex-1 p-0 overflow-hidden bg-background/50 flex flex-col">
-          <ScrollArea ref={scrollAreaRef} className="h-full flex-1">
+        <div className="flex-1 min-h-0 p-0 overflow-hidden bg-transparent flex flex-col">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
             <div className="space-y-4 p-4">
               {!historyLoaded && (
                 <motion.div
@@ -1181,10 +1303,12 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                   <Avatar className="h-8 w-8 border bg-transparent flex items-center justify-center">
                     <BotIcon className="h-full w-full" />
                   </Avatar>
-                  <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm text-muted-foreground flex items-center gap-2 shadow-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>{t.chatLoadingHistory}</span>
-                  </div>
+                  <GlassBubble padding="px-3.5 py-2.5" className="text-sm text-white/85 border-white/5 shadow-[0_18px_45px_rgba(5,6,20,0.45)]">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t.chatLoadingHistory}</span>
+                    </div>
+                  </GlassBubble>
                 </motion.div>
               )}
               {historyLoaded && messages.length === 0 && (
@@ -1198,9 +1322,9 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                     <Avatar className="h-8 w-8 border bg-transparent flex items-center justify-center">
                       <BotIcon className="h-full w-full" />
                     </Avatar>
-                    <div className="max-w-[85%] bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 text-sm leading-relaxed text-foreground shadow-sm">
+                    <GlassBubble className="text-sm leading-relaxed text-white/90 border-white/5 shadow-[0_18px_45px_rgba(5,6,20,0.45)]">
                       {t.chatWelcome}
-                    </div>
+                    </GlassBubble>
                   </div>
                 </motion.div>
               )}
@@ -1260,9 +1384,9 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                 return (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={false}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
                     className={cn('flex flex-col gap-1', message.role === 'user' ? 'items-end' : 'items-start')}
                   >
                     <div className={cn('flex items-start gap-3 w-full', message.role === 'user' && 'justify-end')}>
@@ -1272,12 +1396,12 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                           </Avatar>
                         )}
                         {isContactForm ? (
-                          <div className="max-w-[80%] rounded-2xl bg-muted p-3 sm:p-4 text-sm w-full border border-border/50 shadow-sm">
-                            <div className="mb-1.5 flex items-center gap-2 text-base font-semibold">
+                          <GlassBubble className="w-full max-w-[80%]" padding="p-3 sm:p-4">
+                            <div className="mb-1.5 flex items-center gap-2 text-base font-semibold text-white">
                               <span>👋</span>
                               <span>{t.overlayLeadTitle}</span>
                             </div>
-                            <div className="mb-3 flex items-center gap-2 text-xs sm:text-[13px] text-muted-foreground">
+                            <div className="mb-3 flex items-center gap-2 text-xs sm:text-[13px] text-white/70">
                               <Lock className="h-4 w-4 text-primary" />
                               <span>{t.overlayLeadSubtitle}</span>
                             </div>
@@ -1286,13 +1410,13 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                                 value={nameValue}
                                 onChange={(e) => setNameValue(e.target.value)}
                                 placeholder={t.chatNamePlaceholder}
-                                className="h-9"
+                                className="h-9 bg-black/20 border-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                               />
                               <Input
                                 value={contactValue}
                                 onChange={(e) => setContactValue(e.target.value)}
                                 placeholder={t.chatContactPlaceholder}
-                                className="h-9"
+                                className="h-9 bg-black/20 border-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                               />
                             </div>
                             <div className="flex items-center gap-2 pt-1">
@@ -1300,24 +1424,24 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                                 {t.chatSendButton}
                               </Button>
                             </div>
-                          </div>
+                          </GlassBubble>
                         ) : isSecureConfirm ? (
-                          <div className="max-w-[80%] rounded-2xl bg-muted p-3 sm:p-4 text-sm w-full border border-border/50 shadow-sm">
-                            <div className="mb-1.5 flex items-center gap-2 text-base font-semibold">
+                          <GlassBubble className="w-full max-w-[80%]" padding="p-3 sm:p-4">
+                            <div className="mb-1.5 flex items-center gap-2 text-base font-semibold text-white">
                               <ShieldCheck className="h-4 w-4 text-primary" />
                               <span>{t.chatConfirmThanks}</span>
                             </div>
-                            <div className="text-xs sm:text-[13px] text-muted-foreground">
+                            <div className="text-xs sm:text-[13px] text-white/70">
                               {t.overlayLeadSubtitle}
                             </div>
-                          </div>
+                          </GlassBubble>
                         ) : isFeedbackMarker ? (
-                          <div className="max-w-[85%] bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 text-sm shadow-sm">
-                            <span className="text-sm text-muted-foreground">{t.chatFeedbackSaved}</span>
-                          </div>
+                          <GlassBubble className="max-w-[85%]" padding="p-3.5">
+                            <span className="text-sm text-white/80">{t.chatFeedbackSaved}</span>
+                          </GlassBubble>
                         ) : isMoreHelpPrompt ? (
-                          <div className="max-w-[85%] bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 text-sm shadow-sm">
-                            <div className="mb-3 font-medium">{t.chatMoreHelp}</div>
+                          <GlassBubble className="max-w-[85%]" padding="p-3.5">
+                            <div className="mb-3 font-medium text-white">{t.chatMoreHelp}</div>
                             <div className="flex gap-2">
                               <Button size="sm" className="rounded-full px-5 shadow-sm" onClick={() => {
                                 // Remove this prompt and add "I'm listening" response
@@ -1335,10 +1459,10 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                                 });
                               }}>{t.chatNo}</Button>
                             </div>
-                          </div>
+                          </GlassBubble>
                         ) : isRatingPrompt ? (
-                          <div className="max-w-[85%] bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 text-sm shadow-sm">
-                            <div className="mb-3 font-medium">{t.chatRate}</div>
+                          <GlassBubble className="max-w-[85%]" padding="p-3.5">
+                            <div className="mb-3 font-medium text-white">{t.chatRate}</div>
                             <div className="flex gap-2">
                               <Button size="sm" className="rounded-full px-5 shadow-sm text-lg" onClick={async () => {
                                 try {
@@ -1369,17 +1493,16 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                                 }
                               }}>👎🏻</Button>
                             </div>
-                          </div>
+                          </GlassBubble>
                         ) : (
-                          <div
+                          <GlassBubble
+                            align={message.role === 'user' ? 'right' : 'left'}
                             className={cn(
-                              'max-w-[85%] text-sm leading-relaxed',
-                              emojiOnly
-                                ? 'bg-transparent p-1 text-4xl leading-none'
-                                : (message.role === 'assistant'
-                                  ? 'bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 text-foreground shadow-sm'
-                                  : 'bg-gradient-to-br from-primary to-primary/85 text-primary-foreground rounded-2xl rounded-tr-sm p-3.5 shadow-md')
+                              'text-sm leading-relaxed text-white/90',
+                              emojiOnly && 'text-4xl leading-none text-white/95'
                             )}
+                            padding={emojiOnly ? 'px-2 py-1' : 'px-4 py-3.5'}
+                            highlights={message.role === 'user'}
                           >
                             {message.role === 'assistant' ? (
                               <>
@@ -1391,7 +1514,7 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                             ) : (
                               <div className="whitespace-pre-wrap">{message.content}</div>
                             )}
-                          </div>
+                          </GlassBubble>
                         )}
                         {message.role === 'user' && (
                           <Avatar className="h-8 w-8 border">
@@ -1417,19 +1540,19 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
                    <Avatar className="h-8 w-8 border bg-transparent flex items-center justify-center">
                        <BotIcon className="h-full w-full" />
                   </Avatar>
-                  <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm p-3.5 shadow-sm flex items-center gap-1.5">
+                  <GlassBubble padding="p-3.5" className="flex items-center gap-1.5 text-white/80">
                     <span className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                     <span className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                  </div>
+                  </GlassBubble>
                 </motion.div>
               )}
             </div>
           </ScrollArea>
-        </CardContent>
+        </div>
 
-        <CardFooter
-          className="p-4 flex flex-col gap-2 border-t border-transparent bg-card flex-shrink-0"
+        <div
+          className="p-4 flex flex-col gap-2 border-t border-white/5 bg-transparent flex-shrink-0"
           style={{ paddingBottom: `max(env(safe-area-inset-bottom, 0px), 1rem)` }}
         >
           <div className="relative w-full">
@@ -1489,11 +1612,11 @@ const ChatContent = forwardRef<HTMLDivElement, { onNavigate: (view: ChatWidgetVi
             </div>
             <div />
           </div>
-          <div className="w-full">
-            <WidgetFooter />
-          </div>
-        </CardFooter>
-      </Card>
+        </div>
+        <div className="px-4 pb-4 pt-0 w-full mt-auto">
+          <WidgetFooter />
+        </div>
+      </LiquidGlass>
     </motion.div>
   );
 });
@@ -1506,38 +1629,8 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
   const [sessionChatId, setSessionChatId] = useState<string | null>(null);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  // Show chat button only after scrolling on mobile
-  const [showOnMobile, setShowOnMobile] = useState(false);
-
-  // Scroll detection for mobile - show chat button after scrolling 500px
-  useEffect(() => {
-    let frame: number | null = null;
-
-    const updateVisibility = () => {
-      const isMobile = window.innerWidth < 768;
-      const shouldShow = isMobile ? window.scrollY > 500 : true;
-      setShowOnMobile((prev) => (prev === shouldShow ? prev : shouldShow));
-    };
-
-    const handleScroll = () => {
-      if (frame !== null) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = null;
-        updateVisibility();
-      });
-    };
-
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
-    };
-  }, []);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const shouldRenderContent = view !== 'closed';
 
   const params = useParams();
   const locale = Array.isArray((params as any).locale) ? (params as any).locale[0] : (params as any).locale;
@@ -1546,9 +1639,6 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
   const sendAudioRef = useRef<HTMLAudioElement | null>(null);
   const unreadCountRef = useRef(0);
   const processedMessages = useRef(new Set<string>());
-
-  const GREETING_DELAY_MS = Number(process.env.NEXT_PUBLIC_CHAT_GREETING_DELAY_MS || 15000);
-  const PROACTIVE_GREETING_KEY = 'webimpuls_chat_greet_v6';
 
   useEffect(() => {
     const a = new Audio('/sounds/chat-notify.mp3');
@@ -1652,6 +1742,117 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
   }, []);
 
   // Strong body scroll-lock while widget is open (iOS-safe)
+  useEffect(() => {
+    if (!shouldRenderContent) return;
+    if (typeof document === 'undefined') return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    const scrollY = window.scrollY;
+    const scrollBarGap = window.innerWidth - html.clientWidth;
+    const isIOS =
+      /iP(ad|hone|od)/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyTop: body.style.top,
+      bodyLeft: body.style.left,
+      bodyRight: body.style.right,
+      bodyWidth: body.style.width,
+      bodyPaddingRight: body.style.paddingRight,
+    };
+
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    if (scrollBarGap > 0) {
+      body.style.paddingRight = `${scrollBarGap}px`;
+    }
+
+    if (isIOS) {
+      body.style.position = 'fixed';
+      body.style.top = `-${scrollY}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+    }
+
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.position = prev.bodyPosition;
+      body.style.top = prev.bodyTop;
+      body.style.left = prev.bodyLeft;
+      body.style.right = prev.bodyRight;
+      body.style.width = prev.bodyWidth;
+      body.style.paddingRight = prev.bodyPaddingRight;
+      if (isIOS) {
+        window.scrollTo(0, scrollY);
+      }
+    };
+  }, [shouldRenderContent]);
+
+  // Keep the overlay pinned to the visual viewport (keyboard-safe on mobile Safari)
+  useEffect(() => {
+    if (!shouldRenderContent) return;
+    const el = overlayRef.current;
+    if (!el) return;
+
+    let frame: number | null = null;
+    const update = () => {
+      const vv = window.visualViewport;
+      const width = vv?.width ?? window.innerWidth;
+      const height = vv?.height ?? window.innerHeight;
+      const offsetLeft = vv?.offsetLeft ?? 0;
+      const offsetTop = vv?.offsetTop ?? 0;
+
+      el.style.width = `${Math.round(width)}px`;
+      el.style.height = `${Math.round(height)}px`;
+      el.style.transform = `translate3d(${Math.round(offsetLeft)}px, ${Math.round(offsetTop)}px, 0)`;
+    };
+
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        update();
+      });
+    };
+
+    update();
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', schedule);
+    vv?.addEventListener('scroll', schedule);
+    window.addEventListener('resize', schedule);
+    window.addEventListener('orientationchange', schedule);
+
+    return () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+      vv?.removeEventListener('resize', schedule);
+      vv?.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('orientationchange', schedule);
+    };
+  }, [shouldRenderContent]);
+
+  // Prevent iOS "rubber band" scrolling behind the widget, but keep chat scrollable
+  useEffect(() => {
+    if (!shouldRenderContent) return;
+    const el = overlayRef.current;
+    if (!el) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isInsideScrollable(e.target)) return;
+      e.preventDefault();
+    };
+
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onTouchMove as any);
+  }, [shouldRenderContent]);
   // Відкриваємо віджет у режимі меню (лічильник не обнуляємо)
   const openWidget = () => {
     setView('menu');
@@ -1666,8 +1867,6 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
     }
   };
 
-  const shouldRenderContent = view !== 'closed';
-  
   // Коли користувач відкриває саме чат, обнуляємо лічильник
   useEffect(() => {
     if (view === 'chat') {
@@ -1676,52 +1875,40 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
     }
   }, [view]);
 
-  // Ensure we know existing chatId for background realtime (badge + sound when closed)
+  // Track existing chat id if it already exists (avoid creating sessions/network calls on page load).
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    (async () => {
-      try {
-        const { getChatSession, adoptChatSession } = await import('@/app/actions');
-        let id: string | null = null;
-        try {
-          // 1. localStorage is the single source of truth
-          id = localStorage.getItem('web_impuls_chat_id');
-        } catch {}
+    try {
+      const existing = localStorage.getItem('web_impuls_chat_id');
+      if (existing) setSessionChatId(existing);
+    } catch {}
 
-        if (id) {
-          setSessionChatId(id);
-          await adoptChatSession(id); // Ensure server cookie is in sync
-        } else {
-          // 2. Truly new user, create a session, then set it in localStorage
-          const newSession = await getChatSession();
-          if (newSession.success && newSession.data?.chatId) {
-            id = newSession.data.chatId;
-            setSessionChatId(id);
-            try { localStorage.setItem('web_impuls_chat_id', id); } catch {}
-          }
-        }
-        
-        // Cross-tab sync: listen for storage changes
-        const onStorage = (e: StorageEvent) => {
-          if (e.key === 'web_impuls_chat_id' && e.newValue && e.newValue !== sessionChatId) {
-            adoptChatSession(e.newValue).then(() => setSessionChatId(e.newValue));
-          }
-          if (e.key === 'chat_unread_reset' && e.newValue) {
-             setUnread(0);
-             unreadCountRef.current = 0;
-          }
-        };
-        window.addEventListener('storage', onStorage);
-        cleanup = () => { window.removeEventListener('storage', onStorage); };
-      } catch {}
-    })();
-    return () => { try { cleanup?.(); } catch {} };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'web_impuls_chat_id') {
+        setSessionChatId(e.newValue);
+      }
+      if (e.key === 'chat_unread_reset' && e.newValue) {
+        setUnread(0);
+        unreadCountRef.current = 0;
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
+  // Same-tab writes don't trigger storage events; re-check when opening.
+  useEffect(() => {
+    if (!shouldRenderContent) return;
+    if (sessionChatId) return;
+    try {
+      const existing = localStorage.getItem('web_impuls_chat_id');
+      if (existing) setSessionChatId(existing);
+    } catch {}
+  }, [shouldRenderContent, sessionChatId]);
 
   // Фонові підписки: збільшуємо лічильник, якщо чат не відкритий
   useEffect(() => {
     if (!sessionChatId) return;
+    if (view !== 'closed') return;
     const supabase = getSupabaseClient();
     
     const ch = supabase
@@ -1733,10 +1920,8 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
         if (m.role === 'assistant' && !processedMessages.current.has(messageId)) {
           processedMessages.current.add(messageId);
           
-          if (view !== 'chat') {
-            unreadCountRef.current = unreadCountRef.current + 1;
-            setUnread(unreadCountRef.current);
-          }
+          unreadCountRef.current = unreadCountRef.current + 1;
+          setUnread(unreadCountRef.current);
           playSound(notifyAudioRef);
         }
       })
@@ -1744,32 +1929,6 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
 
     return () => { try { supabase.removeChannel(ch); } catch {} };
   }, [sessionChatId, view, isMuted]);
-
-  // Proactive welcome after GREETING_DELAY_MS, now robustly handled
-  useEffect(() => {
-    if (!sessionChatId) return; // Wait for session ID to be available
-
-    const timer = setTimeout(async () => {
-      try {
-        if (localStorage.getItem(PROACTIVE_GREETING_KEY)) {
-          return;
-        }
-        
-        const meta = await getChatMetaIfExists();
-        
-        if (meta.success && !meta.data.lastMessageAt) {
-          localStorage.setItem(PROACTIVE_GREETING_KEY, '1');
-          
-          const greet = (t.chatWelcome as string) || 'Привіт! 👋 Я ваш AI‑помічник. Чим можу допомогти?';
-          await insertAssistantMessage(greet);
-        }
-      } catch (e) {
-        console.error("Proactive greeting failed:", e);
-      }
-    }, GREETING_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [sessionChatId, t.chatWelcome, GREETING_DELAY_MS]);
 
 
   // Колбек від дочірнього чату: нове асистентське повідомлення
@@ -1816,26 +1975,28 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
   // Use portal if available; render nothing until mount to avoid shifting
   if (!portalNode) return null;
 
-  const isInsideScrollable = (el: EventTarget | null) => {
+  function isInsideScrollable(el: EventTarget | null) {
     try {
       return !!(el as Element | null)?.closest('[data-radix-scroll-area-viewport]');
     } catch {
       return false;
     }
-  };
+  }
   return (
     <>
       {createPortal(
         shouldRenderContent ? (
-          <div
-            className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/40 sm:items-end sm:justify-end sm:pb-6 sm:pr-6"
-            onClick={handleContainerClick}
-            style={{ 
-              transform: 'translate3d(0,0,0)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              willChange: 'transform'
-            }}
+        <div
+          ref={overlayRef}
+          className="fixed left-0 top-0 z-[9999] flex h-screen w-screen items-stretch justify-center overscroll-contain bg-black/40 px-3 sm:items-end sm:justify-end sm:px-0 sm:py-0 sm:pb-6 sm:pr-6"
+          onClick={handleContainerClick}
+          style={{ 
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            willChange: 'transform, width, height',
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+          }}
           >
             <AnimatePresence>
               {view === 'menu' && (
@@ -1868,15 +2029,15 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
         portalNode
       )}
 
-      {createPortal(
-        (
-          <AnimatePresence>
-            {view === 'closed' && showOnMobile && (
-              <motion.button
-                onClick={openWidget}
-                data-chat-trigger
-                className="fixed bottom-5 right-5 z-50 h-12 w-12 md:h-14 md:w-14 rounded-full bg-primary button-glow flex items-center justify-center text-primary-foreground shadow-[0_12px_25px_rgba(124,58,237,0.4)] border border-white/20 will-change-transform"
-                style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+	      {createPortal(
+	        (
+	          <AnimatePresence>
+	            {view === 'closed' && (
+	              <motion.button
+	                onClick={openWidget}
+	                data-chat-trigger
+	                className="chat-launcher-btn chat-fab h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center will-change-transform relative"
+	                style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -1885,7 +2046,7 @@ export function ChatWidget({ initialView = 'closed' }: ChatWidgetProps) {
                 whileTap={{ scale: 0.95 }}
                 aria-label="Open Chat"
               >
-                <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
+                <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 {unread > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shadow">
                     {unread > 99 ? '99+' : unread}

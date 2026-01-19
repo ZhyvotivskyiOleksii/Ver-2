@@ -8,6 +8,7 @@ import { useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/use-theme';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 const reviews = [
   {
@@ -178,29 +179,33 @@ export function ReviewsSection() {
                 >
                   {reviews.map((review, i) => (
                     <div key={i} className="flex items-end gap-5 flex-shrink-0">
-                      <motion.div
-                        className={`relative overflow-hidden p-5 rounded-2xl ${review.color} shadow-lg w-[230px] h-[260px] flex flex-col flex-shrink-0`}
-                      >
-                        <p className={`${review.textColor} text-sm leading-relaxed flex-1 italic`}>
-                          {(review.text as any)[locale] || review.text.ua}
-                        </p>
-                        <span
-                          className="pointer-events-none select-none absolute bottom-14 right-5 text-6xl font-serif text-white/40 dark:text-white/20 drop-shadow-lg"
-                          aria-hidden="true"
+                      <motion.div className="w-[230px] h-[260px] flex flex-col flex-shrink-0">
+                        <LiquidGlass
+                          className="relative w-full h-full p-5 rounded-3xl overflow-hidden flex flex-col shadow-lg"
+                          rounded="3xl"
+                          highlights
                         >
-                          ❝
-                        </span>
-                        <div className="flex items-center gap-3 mt-6 pt-1">
-                          <div className={`w-9 h-9 rounded-full ${review.avatarBg} flex items-center justify-center text-white font-bold text-sm`}>
-                            {review.name.charAt(0)}
+                          <p className={`relative z-10 ${review.textColor} text-sm leading-relaxed flex-1 italic`}>
+                            {(review.text as any)[locale] || review.text.ua}
+                          </p>
+                          <span
+                            className="pointer-events-none select-none absolute bottom-14 right-5 text-6xl font-serif text-white/40 dark:text-white/20 drop-shadow-lg"
+                            aria-hidden="true"
+                          >
+                            ❝
+                          </span>
+                          <div className="relative z-10 flex items-center gap-3 mt-6 pt-1">
+                            <div className={`w-9 h-9 rounded-full ${review.avatarBg} flex items-center justify-center text-white font-bold text-sm`}>
+                              {review.name.charAt(0)}
+                            </div>
+                            <div className="flex flex-col leading-tight">
+                              <div className={`font-semibold text-sm ${review.textColor}`}>{review.name}</div>
+                              <span className={`text-xs font-semibold ${review.textColor} opacity-70`}>
+                                {review.date}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col leading-tight">
-                            <div className={`font-semibold text-sm ${review.textColor}`}>{review.name}</div>
-                            <span className={`text-xs font-semibold ${review.textColor} opacity-70`}>
-                              {review.date}
-                            </span>
-                          </div>
-                        </div>
+                        </LiquidGlass>
                       </motion.div>
 
                       {i === 0 && (
@@ -260,8 +265,12 @@ export function ReviewsSection() {
               >
                 {reviews.map((review, i) => (
                   <motion.div key={i} className="w-full flex-shrink-0 px-2">
-                    <div className={`relative overflow-hidden p-5 rounded-2xl ${review.color} shadow-lg min-h-[220px] flex flex-col`}>
-                      <p className={`${review.textColor} text-base leading-relaxed flex-1 italic`}>
+                    <LiquidGlass
+                      className="relative overflow-hidden p-5 rounded-3xl shadow-lg min-h-[220px] flex flex-col"
+                      rounded="3xl"
+                      highlights
+                    >
+                      <p className={`relative z-10 ${review.textColor} text-base leading-relaxed flex-1 italic`}>
                         {(review.text as any)[locale] || review.text.ua}
                       </p>
                       <span
@@ -270,7 +279,7 @@ export function ReviewsSection() {
                       >
                         ❝
                       </span>
-                      <div className="flex items-center gap-3 mt-6">
+                      <div className="relative z-10 flex items-center gap-3 mt-6">
                         <div className={`w-10 h-10 rounded-full ${review.avatarBg} flex items-center justify-center text-white font-bold text-sm`}>
                           {review.name.charAt(0)}
                         </div>
@@ -281,7 +290,7 @@ export function ReviewsSection() {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </LiquidGlass>
                   </motion.div>
                 ))}
               </motion.div>

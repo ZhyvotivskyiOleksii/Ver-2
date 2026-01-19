@@ -71,34 +71,73 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                function getInitialTheme() {
-                  try {
-                    const storedTheme = localStorage.getItem('theme');
-                    if (storedTheme) {
-                      return storedTheme;
-                    }
-                    return 'dark';
-                  } catch (e) {
-                    return 'dark';
-                  }
-                }
-                
-                function applyTheme(theme) {
-                  const root = document.documentElement;
-                  root.classList.remove('light', 'dark');
-                  
-                  let effectiveTheme = theme;
-                  if (theme === 'system') {
-                    effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                  }
-                  
-                  root.classList.add(effectiveTheme);
-                  root.dataset.theme = effectiveTheme;
-                }
+                const root = document.documentElement;
+                try {
+                  const stored = localStorage.getItem('theme');
+                  const themePreference = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const resolvedTheme = themePreference === 'system' ? (prefersDark ? 'dark' : 'light') : themePreference;
 
-                const initialTheme = getInitialTheme();
-                applyTheme(initialTheme);
+                  root.classList.remove('light', 'dark');
+                  root.classList.add(resolvedTheme);
+                  root.dataset.theme = resolvedTheme;
+                  root.dataset.themePreference = themePreference;
+
+                  if (resolvedTheme === 'dark') {
+                    root.style.backgroundColor = '#010006';
+                    if (document.body) {
+                      document.body.style.backgroundColor = '#010006';
+                      document.body.style.backgroundImage = 'url("/img/pobrane.jpeg")';
+                      document.body.style.backgroundSize = 'cover';
+                      document.body.style.backgroundPosition = 'center top';
+                      document.body.style.backgroundAttachment = 'fixed';
+                    }
+                  } else {
+                    root.style.backgroundColor = 'rgb(248, 250, 252)';
+                    if (document.body) {
+                      document.body.style.backgroundColor = 'transparent';
+                      document.body.style.backgroundImage = 'none';
+                    }
+                  }
+                } catch (error) {
+                  root.classList.remove('light', 'dark');
+                  root.classList.add('dark');
+                  root.dataset.theme = 'dark';
+                  root.dataset.themePreference = 'dark';
+                  root.style.backgroundColor = '#010006';
+                  if (document.body) {
+                    document.body.style.backgroundColor = '#010006';
+                  }
+                }
               })();
+            `,
+          }}
+        />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              html { background-color: #010006; }
+              html.dark { background-color: #010006; }
+              html.dark body { 
+                background-color: #010006 !important;
+                background-image: url("/img/pobrane.jpeg") !important;
+                background-size: cover !important;
+                background-position: center top !important;
+                background-attachment: fixed !important;
+              }
+              html.light {
+                background-color: rgb(248, 250, 252) !important;
+                background-attachment: fixed !important;
+              }
+              html.light body {
+                background-color: transparent !important;
+                background-image: none !important;
+              }
+              /* Приховати ялинку в світлій темі одразу */
+              html.light [alt="Holiday tree"],
+              html.light img[src*="back-new"] {
+                display: none !important;
+              }
             `,
           }}
         />

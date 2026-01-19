@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { translations } from '@/lib/translations';
 import { useState } from 'react';
 import { OrderModal } from '../order-modal';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 export function CTASection() {
   const params = useParams();
@@ -18,7 +19,11 @@ export function CTASection() {
     <>
       <section className="section-spacing relative overflow-hidden">
         <div className="container relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
+          <LiquidGlass
+            className="max-w-3xl mx-auto text-center px-6 py-8 md:px-10 md:py-12 rounded-[36px] border border-white/15 shadow-[0_25px_80px_rgba(5,6,20,0.6)]"
+            rounded="3xl"
+            highlights
+          >
             {/* Badge */}
             <div className="section-eyebrow px-4 py-2 max-sm:px-3 max-sm:py-1.5 max-sm:text-[11px] rounded-full bg-primary/20 border border-primary/30 text-primary mb-6">
               <Zap className="w-4 h-4 text-primary" />
@@ -43,25 +48,23 @@ export function CTASection() {
               <Button
                 size="lg"
                 onClick={() => setIsOrderModalOpen(true)}
-                className="w-auto max-w-full group relative overflow-hidden rounded-full px-6 py-3 md:px-8 md:py-5 text-base md:text-lg font-semibold bg-gradient-to-r from-[#7c3aed] to-[#a855f7] hover:from-[#6d28d9] hover:to-[#9333ea] shadow-lg shadow-[#7c3aed]/30 transition-all hover:shadow-xl hover:shadow-[#7c3aed]/40 hover:scale-105 whitespace-nowrap"
+                className="hero-cta-primary group w-full sm:w-auto flex items-center justify-center gap-2 text-base md:text-lg font-semibold"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  {t.ctaButton || 'Замовити сайт'}
-                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
+                {t.ctaButton || 'Замовити сайт'}
+                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:translate-x-1" />
               </Button>
 
               <Button
                 size="lg"
                 variant="outline"
-                className="w-auto max-w-full rounded-full px-6 py-3 md:px-8 md:py-5 text-base md:text-lg font-semibold border-2 whitespace-nowrap"
+                className="hero-cta-secondary group w-full sm:w-auto flex items-center justify-center gap-2 text-base md:text-lg font-semibold"
                 onClick={() => {
                   // Open chat widget
                   const chatButton = document.querySelector('[data-chat-trigger]') as HTMLButtonElement;
                   if (chatButton) chatButton.click();
                 }}
               >
-                <MessageCircle className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                <MessageCircle className="w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:-translate-y-0.5" />
                 {t.ctaChat || 'Написати в чат'}
               </Button>
             </div>
@@ -70,7 +73,7 @@ export function CTASection() {
             <p className="mt-8 text-sm text-muted-foreground">
               {t.ctaTrust || '✓ Без передоплати ✓ Гарантія якості ✓ Підтримка 24/7'}
             </p>
-          </div>
+          </LiquidGlass>
         </div>
       </section>
 
